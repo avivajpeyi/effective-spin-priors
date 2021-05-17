@@ -19,44 +19,8 @@ def Di(z):
     return PL(1.0 - z + 0j)
 
 
-def chi_effective_prior_from_aligned_spins(q, aMax, xs):
-
-    """
-    Function defining the conditional priors p(chi_eff|q) corresponding to
-    uniform, aligned component spin priors.
-
-    Inputs
-    q: Mass ratio value (according to the convention q<1)
-    aMax: Maximum allowed dimensionless component spin magnitude
-    xs: Chi_effective value or values at which we wish to compute prior
-
-    Returns:
-    Array of prior values
-    """
-
-    # Ensure that `xs` is an array and take absolute value
-    xs = np.reshape(xs, -1)
-
-    # Set up various piecewise cases
-    pdfs = np.zeros(xs.size)
-    caseA = (xs > aMax * (1.0 - q) / (1.0 + q)) * (xs <= aMax)
-    caseB = (xs < -aMax * (1.0 - q) / (1.0 + q)) * (xs >= -aMax)
-    caseC = (xs >= -aMax * (1.0 - q) / (1.0 + q)) * (xs <= aMax * (1.0 - q) / (1.0 + q))
-
-    # Select relevant effective spins
-    x_A = xs[caseA]
-    x_B = xs[caseB]
-    x_C = xs[caseC]
-
-    pdfs[caseA] = (1.0 + q) ** 2.0 * (aMax - x_A) / (4.0 * q * aMax ** 2)
-    pdfs[caseB] = (1.0 + q) ** 2.0 * (aMax + x_B) / (4.0 * q * aMax ** 2)
-    pdfs[caseC] = (1.0 + q) / (2.0 * aMax)
-
-    return pdfs
-
-
+# +
 def chi_effective_prior_from_isotropic_spins(q, aMax, xs):
-
     """
     Function defining the conditional priors p(chi_eff|q) corresponding to
     uniform, isotropic component spin priors.
@@ -217,52 +181,44 @@ def chi_effective_prior_from_isotropic_spins(q, aMax, xs):
 
     return np.real(pdfs)
 
-
-def chi_p_prior_from_isotropic_spins(q, aMax, xs):
-
+def get_marginalised_chi_eff(xs):
     """
-    Function defining the conditional priors p(chi_p|q) corresponding to
-    uniform, isotropic component spin priors.
+    Function defining the marginalised prior p(chi_eff) corresponding to
+    uniform, isotropic component spin priors, and assuming the maximum 
+    allowed dimensionless component spin magnitude aMax=1
 
     Inputs
-    q: Mass ratio value (according to the convention q<1)
-    aMax: Maximum allowed dimensionless component spin magnitude
-    xs: Chi_p value or values at which we wish to compute prior
+    xs: Chi_effective value or values at which we wish to compute prior
 
     Returns:
     Array of prior values
     """
+    qs = np.linspace(0, 1, 300)
+    p_xeff = np.zeros(len(qs))
+    for q in qs[1:]:  # skip over q=0
+        p_xeff += np.array(chi_effective_prior_from_isotropic_spins(q, aMax=1, xs=xs))
+    p_xeff = p_xeff / (len(qs) - 1)
+    return p_xeff
 
-    # Ensure that `xs` is an array and take absolute value
-    xs = np.reshape(xs, -1)
 
-    # Set up various piecewise cases
-    pdfs = np.zeros(xs.size)
-    caseA = xs < q * aMax * (3.0 + 4.0 * q) / (4.0 + 3.0 * q)
-    caseB = (xs >= q * aMax * (3.0 + 4.0 * q) / (4.0 + 3.0 * q)) * (xs < aMax)
 
-    # Select relevant effective spins
-    x_A = xs[caseA]
-    x_B = xs[caseB]
+# +
+def q_factor(q):
+    return ((3.0 + 4.0 * q) / (4.0 + 3.0 * q)) * q
 
-    pdfs[caseA] = (
-        (1.0 / (aMax ** 2 * q))
-        * ((4.0 + 3.0 * q) / (3.0 + 4.0 * q))
-        * (
-            np.arccos((4.0 + 3.0 * q) * x_A / ((3.0 + 4.0 * q) * q * aMax))
-            * (aMax - np.sqrt(aMax ** 2 - x_A ** 2) + x_A * np.arccos(x_A / aMax))
-            + np.arccos(x_A / aMax)
-            * (
-                aMax * q * (3.0 + 4.0 * q) / (4.0 + 3.0 * q)
-                - np.sqrt(
-                    aMax ** 2 * q ** 2 * ((3.0 + 4.0 * q) / (4.0 + 3.0 * q)) ** 2
-                    - x_A ** 2
-                )
-                + x_A * np.arccos((4.0 + 3.0 * q) * x_A / ((3.0 + 4.0 * q) * aMax * q))
-            )
-        )
-    )
+def calculate_xp_given_xeff(xeff, a1, a2, q, cos1, cos2, tan1, tan2):
+    case1 = (xeff * (1 + q) - a2 * q * cos2) * tan1
+    case2 = (xeff + q * xeff - a1 * cos1) * tan2 * q_factor(q)
+    return np.maximum(case1, case2)
 
-    pdfs[caseB] = (1.0 / aMax) * np.arccos(x_B / aMax)
+def calculate_xp(a1, a2, q, sin1, sin2):
+    case1 = a1 * sin1
+    case2 = a2 * sin2 * q_factor(q)
+    return np.maximum(case1, case2)
 
-    return pdfs
+def calculate_xeff(a1, a2, cos1, cos2, q):
+    return ((a1 * cos1) + (q * a2 * cos2)) / (1.0 + q)
+# -
+
+
+
