@@ -1,0 +1,15 @@
+repos:
+-   repo: https://github.com/mwouts/jupytext
+    rev: v1.11.0  # CURRENT_TAG/COMMIT_HASH
+    hooks:
+    - id: jupytext
+      args: [--sync, --pipe, black]
+      additional_dependencies:
+        - black==20.8b1 # Matches hook
+
+-   repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+    - id: black
+      language_version: python3
+

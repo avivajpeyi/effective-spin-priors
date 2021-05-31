@@ -8,7 +8,6 @@ from effective_spins import priors
 
 
 class TestIsotropicSpins(unittest.TestCase):
-
     def setUp(self):
         self.outdir = "test"
         os.makedirs(self.outdir, exist_ok=True)
@@ -20,7 +19,7 @@ class TestIsotropicSpins(unittest.TestCase):
     def test_something(self):
         ans = priors.chi_p_prior_from_isotropic_spins(q=1, aMax=1, xs=0)
         self.assertIsInstance(ans, type(np.array([])))
-        self.assertEqual(ans[0], 0.)
+        self.assertEqual(ans[0], 0.0)
 
 
 def test_me_as_well():
@@ -36,5 +35,5 @@ def test_me_as_well3():
     assert True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
