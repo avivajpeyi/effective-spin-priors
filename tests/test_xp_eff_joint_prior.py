@@ -3,7 +3,6 @@ import shutil
 import unittest
 
 from effective_spins import joint_xp_xeff_prior
-from . import utils
 
 
 class TestXpXeffJointPrior(unittest.TestCase):

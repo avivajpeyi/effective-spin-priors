@@ -15,7 +15,7 @@ class TestPriorConditionalOnXeff(unittest.TestCase):
         os.makedirs(self.outdir, exist_ok=True)
         self.p = utils.get_traditional_prior()
         self.xeffs = [-0.75, -0.5, -0.25, -0.1, 0.1, 0.25, 0.5, 0.75]
-        self.N = 1000
+        self.N = 100
 
     # def tearDown(self):
     #     if os.path.exists(self.outdir):
@@ -27,7 +27,7 @@ class TestPriorConditionalOnXeff(unittest.TestCase):
             p_param = priors_conditional_on_xeff._p_param_given_xeff(
                 param=param,
                 xeff=xeff,
-                non_conditional_prior=self.p,
+                init_a1a2qcos2_prior=self.p,
                 param_key=param_key,
             )
             ax.plot(param, p_param, "-", label=f"xeff={xeff}")
@@ -55,7 +55,7 @@ class TestPriorConditionalOnXeff(unittest.TestCase):
 
     def test_simple_val(self):
         p_a1 = priors_conditional_on_xeff.a1_prior_given_xeff(
-            a1=0.1, xeff=0.2, non_conditional_prior=self.p
+            a1=0.1, xeff=0.2, init_a1a2qcos2_prior=self.p
         )
         self.assertNotEqual(p_a1, 1)
 
